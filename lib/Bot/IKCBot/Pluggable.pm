@@ -11,6 +11,10 @@ use POE qw(
          );
 use base qw( Bot::BasicBot::Pluggable );
 
+our $STATE_TABLE = {
+    say => 'hearsay',
+};
+
 sub run {
     my $self = shift;
 
@@ -24,7 +28,7 @@ sub run {
         object_states => [
             $self => {
                 _start => 'start_state_ikc',
-                say    => 'hearsay',
+                %$STATE_TABLE,
             }
            ]
        );
@@ -39,7 +43,7 @@ sub start_state_ikc {
 
     $kernel->alias_set($self->{ALIASNAME}."_IKC");
 
-    $kernel->call( IKC => publish => $self->{ALIASNAME}."_IKC" => [qw(say)] );
+    $kernel->call( IKC => publish => $self->{ALIASNAME}."_IKC" => [keys %$STATE_TABLE] );
 }
 
 sub hearsay {
