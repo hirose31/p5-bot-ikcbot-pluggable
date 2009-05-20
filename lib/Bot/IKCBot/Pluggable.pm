@@ -124,7 +124,7 @@ __END__
 
 =head1 NAME
 
-Bot::IKCBot::Pluggable - extened Bot::BasicBot::Pluggable for IKC
+Bot::IKCBot::Pluggable - extended Bot::BasicBot::Pluggable for IKC
 
 =head1 SYNOPSIS
 

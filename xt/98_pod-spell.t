@@ -11,3 +11,9 @@ Masaaki
 AnnoCPAN
 CPAN
 RT
+IKC
+IKCBot
+IRC
+Infobot
+Nagios's
+bot

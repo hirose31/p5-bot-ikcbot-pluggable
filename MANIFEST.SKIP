@@ -27,3 +27,4 @@
 ^MEMO
 \.shipit$
 \.gitignore$
+^TODO
