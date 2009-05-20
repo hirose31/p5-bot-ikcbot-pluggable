@@ -5,11 +5,10 @@ use strict;
 
 our $VERSION = '0.01';
 
-use POE qw(
-              Session
-              Component::IKC::Server
-         );
 use base qw( Bot::BasicBot::Pluggable );
+use POE;
+use POE::Session;
+use POE::Component::IKC::Server;
 
 our $STATE_TABLE = {
     say    => 'hearsay',

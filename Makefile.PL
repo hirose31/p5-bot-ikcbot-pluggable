@@ -8,6 +8,8 @@ license  'perl';
 build_requires 'Test::More';
 
 requires 'Bot::BasicBot::Pluggable';
+requires 'POE';
+requires 'POE::Session';
 requires 'POE::Component::IKC::Server';
 
 auto_install;
