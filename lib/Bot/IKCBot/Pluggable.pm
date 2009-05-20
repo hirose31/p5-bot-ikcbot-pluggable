@@ -12,7 +12,8 @@ use POE qw(
 use base qw( Bot::BasicBot::Pluggable );
 
 our $STATE_TABLE = {
-    say => 'hearsay',
+    say    => 'hearsay',
+    notice => 'hearnotice',
 };
 
 sub run {
@@ -49,6 +50,73 @@ sub start_state_ikc {
 sub hearsay {
     my($self, $arg) = @_[ OBJECT, ARG0 ];
     $self->say($arg);
+}
+
+sub hearnotice {
+    my($self, $arg) = @_[ OBJECT, ARG0 ];
+    $self->notice($arg);
+}
+
+# just Bot::BasicBot::say =~ s/privmsg/notice/g
+sub notice {
+    # If we're called without an object ref, then we're handling saying
+    # stuff from inside a forked subroutine, so we'll freeze it, and toss
+    # it out on STDOUT so that POE::Wheel::Run's handler can pick it up.
+    if ( !ref( $_[0] ) ) {
+        print $_[0] . "\n";
+        return 1;
+    }
+
+    # Otherwise, this is a standard object method
+
+    my $self = shift;
+    my $args;
+    if (ref($_[0])) {
+        $args = shift;
+    } else {
+        my %args = @_;
+        $args = \%args;
+    }
+
+    my $body = $args->{body};
+
+    # add the "Foo: bar" at the start
+    $body = "$args->{who}: $body"
+        if ( $args->{channel} ne "msg" and $args->{address} );
+
+    # work out who we're going to send the message to
+    my $who = ( $args->{channel} eq "msg" ) ? $args->{who} : $args->{channel};
+
+    unless ( $who && $body ) {
+        print STDERR "Can't NOTICE without target and body\n";
+        print STDERR " called from ".([caller]->[0])." line ".([caller]->[2])."\n";
+        print STDERR " who = '$who'\n body = '$body'\n";
+        return;
+    }
+
+    # if we have a long body, split it up..
+    local $Text::Wrap::columns = 300;
+    local $Text::Wrap::unexpand = 0;             # no tabs
+    my $wrapped = Text::Wrap::wrap('', '..', $body); #  =~ m!(.{1,300})!g;
+    # I think the Text::Wrap docs lie - it doesn't do anything special
+    # in list context
+    my @bodies = split(/\n+/, $wrapped);
+
+    # post an event that will send the message
+    for my $body (@bodies) {
+        my ($who, $body) = $self->charset_encode($who, $body);
+        #warn "$who => $body\n";
+        $poe_kernel->post( $self->{IRCNAME}, 'notice', $who, $body );
+    }
+}
+
+# use notice instead of say (privmsg) when bot's reply
+sub reply {
+    my $self = shift;
+    my ($mess, $body) = @_;
+    my %hash = %$mess;
+    $hash{body} = $body;
+    return $self->notice(%hash);
 }
 
 =head1 NAME
