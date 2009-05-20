@@ -118,37 +118,94 @@ sub reply {
     return $self->notice(%hash);
 }
 
+1;
+
+__END__
+
 =head1 NAME
 
-Bot::IKCBot::Pluggable - The great new Bot::IKCBot::Pluggable!
-
-=head1 VERSION
-
-Version 0.01
-
-=cut
+Bot::IKCBot::Pluggable - extened Bot::BasicBot::Pluggable for IKC
 
 =head1 SYNOPSIS
 
-Quick summary of what the module does.
+run IKCBot server.
 
-Perhaps a little code snippet.
+  use Bot::IKCBot::Pluggable;
+  
+  my $bot = Bot::IKCBot::Pluggable->new(
+      ...
+      ALIASNAME => 'ikchan',
+      ikc_ip    => '127.0.0.1',
+      ikc_port  => 1919,
+     );
+  $bot->load("Karma"); # you can load any
+                       # Bot::BasicBot::Pluggable::Module::*
+  $bot->run;
 
-    use Bot::IKCBot::Pluggable;
+and you can talk to IKCBot by IKC. IKC specifier is
+I<ALIASNAME>_IKC/I<PUBLISHED_STATE>.
 
-    my $foo = Bot::IKCBot::Pluggable->new();
+  use POE::Component::IKC::ClientLite;
+  
+  my $msg      = "hello!";
+  my $channel  = "#test1919";
+  my $bot_name = 'ikchan';
+  
+  my $ikc = POE::Component::IKC::ClientLite::create_ikc_client(
+      ip      => '127.0.0.1',
+      port    => 1919,
+      name    => 'notify-irc',
+     );
+  $ikc->post($bot_name.'_IKC/say', { body => $msg, channel => $channel });
+
+=head1 DESCRIPTION
+
+Bot::IKCBot::Pluggable is IRC bot extends Bot::BasicBot::Pluggable for
+IKC support. So you can use all Bot::BasicBot::Pluggable::Module::*,
+Karma, Infobot, Title and so on.
+
+In my case, for sending Nagios's alert message to IRC channel, run
+IKCBot and define Nagios's command that invokes notify script to send
+alert message to IKCBot.
+
+
+If you want to add your own state of POE::Session, you can do it by
+changing hashref $Bot::IKCBot::Pluggable::STATE_TABLE and define
+handler function.
+
+  use POE;
+  use Bot::IKCBot::Pluggable;
+  
+  $Bot::IKCBot::Pluggable::STATE_TABLE->{important} = "say_2times";
+  
+  *Bot::IKCBot::Pluggable::say_2times = sub {
+      my($self, $arg) = @_[ OBJECT, ARG0 ];
+      $self->say($arg);
+      $self->say($arg);
+  };
+  
+  my $bot = Bot::IKCBot::Pluggable->new(
     ...
+  );
 
-=head1 EXPORT
 
-A list of functions that can be exported.  You can delete this section
-if you don't export anything, such as for a purely object-oriented module.
+Additionally, Bot::IKCBot::Pluggable has "notice" method and use
+"notice" instead of "say"(=privmsg) when replying.
 
-=head1 FUNCTIONS
+=head1 SEE ALSO
+
+L<Bot::BasicBot::Pluggable>,
+L<Bot::BasicBot>.
+L<POE::Component::IKC::Server>,
+L<POE::Component::IKC::ClientLite>,
 
 =head1 AUTHOR
 
 HIROSE Masaaki, C<< <hirose31 at gmail.com> >>
+
+=head1 REPOSITORY
+
+L<http://github.com/hirose31/p5-bot-ikcbot-pluggable/tree/master>
 
 =head1 BUGS
 
@@ -156,55 +213,12 @@ Please report any bugs or feature requests to C<bug-bot-ikcbot-pluggable at rt.c
 the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Bot-IKCBot-Pluggable>.  I will be notified, and then you'll
 automatically be notified of progress on your bug as I make changes.
 
-
-
-
-=head1 SUPPORT
-
-You can find documentation for this module with the perldoc command.
-
-    perldoc Bot::IKCBot::Pluggable
-
-
-You can also look for information at:
-
-=over 4
-
-=item * RT: CPAN's request tracker
-
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Bot-IKCBot-Pluggable>
-
-=item * AnnoCPAN: Annotated CPAN documentation
-
-L<http://annocpan.org/dist/Bot-IKCBot-Pluggable>
-
-=item * CPAN Ratings
-
-L<http://cpanratings.perl.org/d/Bot-IKCBot-Pluggable>
-
-=item * Search CPAN
-
-L<http://search.cpan.org/dist/Bot-IKCBot-Pluggable/>
-
-=back
-
-
-=head1 ACKNOWLEDGEMENTS
-
-
 =head1 COPYRIGHT & LICENSE
-
-Copyright 2009 HIROSE Masaaki, all rights reserved.
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
 
-
 =cut
-
-1; # End of Bot::IKCBot::Pluggable
-
-__END__
 
 # for Emacsen
 # Local Variables:
