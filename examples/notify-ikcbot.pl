@@ -8,10 +8,11 @@ use Carp;
 use Encode;
 use POE::Component::IKC::ClientLite;
 
-my $ikc_ip   = '127.0.0.1',
-my $ikc_port = 1919;
-my $bot_name = 'ikchan',
-my $channel  = '#test1919';
+our $channel  = '#test1919';
+our $ikc_ip   = '127.0.0.1',
+our $ikc_port = 1919;
+our $bot_name = 'ikchan',
+eval { require "ikcbot-config.pl" };
 
 my $ikc = POE::Component::IKC::ClientLite::create_ikc_client(
     ip      => $ikc_ip,
@@ -31,6 +32,8 @@ $msg =~ s/[\r\n]/ /g;
 
 utf8::encode($msg) if utf8::is_utf8($msg);
 $ikc->post($bot_name.'_IKC/say', { body => $msg, channel => $channel });
+# $ikc->post($bot_name.'_IKC/notice', { body => $msg, channel => $channel });
+# $ikc->post($bot_name.'_IKC/important', { body => $msg, channel => $channel });
 exit;
 
 __END__
