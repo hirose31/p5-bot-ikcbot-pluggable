@@ -9,7 +9,7 @@ use Bot::IKCBot::Pluggable;
 
 our $irc_server = "irc.example.com";
 our $irc_port   = 6667;
-our @nick = qw(pluggabot pbot pluggable);
+our @nick = qw(ikchan ikchan^^ ikchan^_^);
 
 our $channel  = '#test1919';
 our $ikc_ip   = '127.0.0.1',
@@ -19,6 +19,7 @@ eval { require "ikcbot-config.pl" };
 
 # define my own state handler
 $Bot::IKCBot::Pluggable::STATE_TABLE->{important} = "say_2times";
+
 no warnings 'once';
 *Bot::IKCBot::Pluggable::say_2times = sub {
     my($self, $arg) = @_[ OBJECT, ARG0 ];
@@ -48,8 +49,38 @@ my $bot = Bot::IKCBot::Pluggable->new(
     ikc_port => $ikc_port,
    );
 
-$bot->load("Karma");
-$bot->load("Join");
+my $mod_join  = $bot->load("Join");
+
+my $mod_karma = $bot->load("Karma");
+$mod_karma->set("user_ignore_selfkarma" => 0);
+# dirty hack
+# echo back karma rating when someone <thing>++.
+{
+    no warnings qw(redefine once);
+    package Bot::BasicBot::Pluggable::Module::Karma;
+
+    # move <thing>++ routine to admin() because cannot say any message
+    # in seen().
+    *admin = \&seen;
+    *seen  = sub { return; };
+
+    *add_karma_orig = \&add_karma;
+    *add_karma      = sub {
+        my $self = shift;
+        my($object, $good, $reason, $who) = @_;
+        $self->add_karma_orig(@_);
+
+        my ($karma, $n_good, $n_bad) = $self->get_karma($object);
+        my $reply = sprintf "%s: %d (%d++ %d--)",
+            $object,
+            $karma,
+            scalar($n_good->()),
+            scalar($n_bad->()),
+            ;
+
+        return $reply;
+    };
+}
 
 $bot->run;
 
